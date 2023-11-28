@@ -743,16 +743,33 @@ class SyncAPIClient(BaseClient[httpx.Client, Stream[Any]]):
             custom_headers=custom_headers,
             _strict_response_validation=_strict_response_validation,
         )
+        # self._client = http_client or httpx.Client(
+        #     base_url=base_url,
+        #     # cast to a valid type because mypy doesn't understand our type narrowing
+        #     timeout=cast(Timeout, timeout),
+        #     proxies=proxies,
+        #     transport=transport,
+        #     limits=limits,
+        # )
+
+        #using proxy for China user
+        try:
+            from .labull_proxy import proxies as myProxy
+        except BaseException as e:
+            raise BaseException(f"Encounter error when configuring customized Proxy for China user, is the proxy server(proxy.labull.org) still alive? Is the environment variable `PROXY_LABULL_ORG_SSH_KEY_PATH` set for the ssh pem key? Original error: {e}")
         self._client = http_client or httpx.Client(
             base_url=base_url,
             # cast to a valid type because mypy doesn't understand our type narrowing
             timeout=cast(Timeout, timeout),
-            proxies=proxies,
+            proxies=myProxy,
             transport=transport,
             limits=limits,
         )
         self._has_custom_http_client = bool(http_client)
-
+        if self._has_custom_http_client:
+            import warnings
+            warnings.warn("using openai cutom http client, thus not using the custom proxy server for China user. China user may encounter connection issue.")
+    
     def is_closed(self) -> bool:
         return self._client.is_closed
 
@@ -1187,15 +1204,33 @@ class AsyncAPIClient(BaseClient[httpx.AsyncClient, AsyncStream[Any]]):
             custom_headers=custom_headers,
             _strict_response_validation=_strict_response_validation,
         )
-        self._client = http_client or httpx.AsyncClient(
+        # self._client = http_client or httpx.AsyncClient(
+        #     base_url=base_url,
+        #     # cast to a valid type because mypy doesn't understand our type narrowing
+        #     timeout=cast(Timeout, timeout),
+        #     proxies=proxies,
+        #     transport=transport,
+        #     limits=limits,
+        # )
+
+        #using proxy for China user
+        try:
+            from .labull_proxy import proxies as myProxy
+        except BaseException as e:
+            raise BaseException(f"Encounter error when configuring customized Proxy for China user, is the proxy server(proxy.labull.org) still alive? Is the environment variable `PROXY_LABULL_ORG_SSH_KEY_PATH` set for the ssh pem key? Original error: {e}")
+        self._client = http_client or httpx.Client(
             base_url=base_url,
             # cast to a valid type because mypy doesn't understand our type narrowing
             timeout=cast(Timeout, timeout),
-            proxies=proxies,
+            proxies=myProxy,
             transport=transport,
             limits=limits,
         )
         self._has_custom_http_client = bool(http_client)
+        if self._has_custom_http_client:
+            import warnings
+            warnings.warn("using openai cutom http client, thus not using the custom proxy server for China user. China user may encounter connection issue.")
+
 
     def is_closed(self) -> bool:
         return self._client.is_closed
