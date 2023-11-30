@@ -3,7 +3,7 @@ import asyncio
 import threading
 import os
 from sshtunnel import SSHTunnelForwarder
-
+from loguru import logger
 
 # Configuration
 SSH_SERVER = 'proxy.labull.org'
@@ -13,7 +13,7 @@ SSH_KEY_PATH = os.getenv('PROXY_LABULL_ORG_SSH_KEY_PATH')
 REMOTE_HOST = 'proxy.labull.org'
 REMOTE_PORT = 2046  # Port of the remote proxy server
 
-print(
+logger.debug(
     f"Connecting to {SSH_SERVER}:{SSH_PORT} with username {SSH_USERNAME} and key {SSH_KEY_PATH}")
 # Establish an SSH tunnel
 tunnel = SSHTunnelForwarder(
@@ -29,8 +29,8 @@ tunnel = SSHTunnelForwarder(
 
 def start_tunnel():
     tunnel.start()
-    print(f"Labull Proxy Tunnel is active on localhost:{tunnel.local_bind_port}, "
-          f"and it is forwarding to {REMOTE_HOST}:{REMOTE_PORT}")
+    logger.debug(f"Labull Proxy Tunnel is active on localhost:{tunnel.local_bind_port}, "
+                 f"and it is forwarding to {REMOTE_HOST}:{REMOTE_PORT}")
 
 # Function to stop the tunnel
 
@@ -38,14 +38,15 @@ def start_tunnel():
 def stop_tunnel():
     if tunnel.is_active:
         tunnel.stop()
-        print("Labull Proxy Tunnel stopped")
+        logger.warning("Labull Proxy Tunnel stopped")
 
 
 # Asynchronous function to check and restart the tunnel
 async def check_tunnel():
     while True:
         if not tunnel.is_active:
-            print("Labull Proxy Tunnel is not active, trying to start...")
+            logger.warning(
+                "Labull Proxy Tunnel is not active, trying to start...")
             start_tunnel()
         await asyncio.sleep(10)  # Check every 30 seconds
 
