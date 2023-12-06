@@ -36,19 +36,29 @@ def start_tunnel():
 
 
 def stop_tunnel():
-    if tunnel.is_active:
-        tunnel.stop()
-        logger.warning("Labull Proxy Tunnel stopped")
+    tunnel.stop()
+    logger.warning("Labull Proxy Tunnel stopped")
 
 
 # Asynchronous function to check and restart the tunnel
 async def check_tunnel():
     while True:
-        if not tunnel.is_active:
+        logger.debug("Checking Labull Proxy Tunnel...")
+        if tunnel.is_active:
+            logger.debug("Labull Proxy Tunnel is active")
+        else:
             logger.warning(
-                "Labull Proxy Tunnel is not active, trying to start...")
-            start_tunnel()
-        await asyncio.sleep(10)  # Check every 30 seconds
+                "Labull Proxy Tunnel is not active, stopping the tunnel and trying to restart...")
+            stop_tunnel()
+            try:
+                start_tunnel()
+            except Exception as e:
+                logger.error(
+                    f"Labull Proxy Tunnel failed to start with error message: {e}")
+        logger.debug(
+            "Labull Proxy Tunnel will be checked again in 30 seconds")
+
+        await asyncio.sleep(30)  # Check every 30 seconds
 
 # Function to run the asynchronous loop in a separate thread
 
